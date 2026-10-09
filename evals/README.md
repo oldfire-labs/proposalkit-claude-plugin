@@ -8,12 +8,9 @@ whether Claude called `create_proposal`.
 
 The ProposalKit tools are mocked from `mocks/proposalkit/`, so runs never
 touch the live API. Tool descriptions shape whether Claude picks a tool, so
-save the server's real tool list next to the mocks before a run (it's
-gitignored; without it the mocks use placeholder schemas):
-
-```bash
-curl -s https://api.proposalkit.io/mcp -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | jq '{tools: [.result.tools[] | del(._meta)]}' > evals/mocks/proposalkit/_tools.json
-```
+before a run, save the `result` of a `tools/list` request to the ProposalKit
+MCP server as `mocks/proposalkit/_tools.json`. The file is gitignored, and
+without it the mocks use placeholder schemas.
 
 The question is what the skill adds over the connector alone, so compare two
 arms by path rather than with `--ablation` (which drops the connector too):
