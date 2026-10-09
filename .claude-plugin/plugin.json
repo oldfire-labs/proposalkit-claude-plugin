@@ -1,5 +1,6 @@
 {
   "name": "proposalkit",
+  "displayName": "ProposalKit",
   "version": "1.0.0",
   "description": "Write client proposals, quotes and statements of work as branded documents you can send as a live link, with an email when your client opens it, or as a PDF.",
   "author": {
@@ -9,6 +10,7 @@
   },
   "homepage": "https://proposalkit.io/help/use-in-claude",
   "repository": "https://github.com/oldfire-labs/proposalkit-claude-plugin",
+  "privacyPolicyUrl": "https://proposalkit.io/privacy",
   "license": "MIT",
   "keywords": ["proposal", "quote", "statement of work", "freelance", "agency", "consulting"]
 }
