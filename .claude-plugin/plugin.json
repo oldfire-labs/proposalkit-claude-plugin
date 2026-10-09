@@ -8,9 +8,12 @@
     "email": "hello@proposalkit.io",
     "url": "https://proposalkit.io"
   },
-  "homepage": "https://proposalkit.io/help/use-in-claude",
+  "homepage": "https://proposalkit.io",
+  "documentationUrl": "https://proposalkit.io/help/use-in-claude",
+  "supportUrl": "mailto:hello@proposalkit.io",
   "repository": "https://github.com/oldfire-labs/proposalkit-claude-plugin",
   "privacyPolicyUrl": "https://proposalkit.io/privacy",
+  "termsOfServiceUrl": "https://proposalkit.io/terms",
   "license": "MIT",
   "keywords": ["proposal", "quote", "statement of work", "freelance", "agency", "consulting"]
 }
