@@ -1,0 +1,965 @@
+{
+  "tools": [
+    {
+      "name": "create_proposal",
+      "title": "Create proposal draft",
+      "description": "Create a new proposal draft and get a hosted preview link immediately. Works without an account. Every section starts empty: write the content with update_proposal, addressing sections by the keys in the result, and reshape the structure with add_section and remove_section. apply_branding brands the proposal from the sender's website URL; it fetches the site and extracts the logo and colors itself. The result also includes a claim_token for editing the draft in later calls. The finished proposal is delivered as a live link by default (publish_proposal); export_pdf covers users who prefer a file.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Proposal title, e.g. the project or engagement name."
+          },
+          "client_name": {
+            "type": "string",
+            "description": "Name of the client or company the proposal is prepared for. Shown on the cover."
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "link": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Hosted page for the proposal: a read-only preview while drafting, the published page after publish. Not an editor."
+          },
+          "totals": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Sum of pricing line items, or null without a pricing section.",
+            "properties": {
+              "currency": {
+                "type": "string"
+              },
+              "total": {
+                "type": "number"
+              }
+            }
+          },
+          "sections": {
+            "type": "array",
+            "description": "Section keys for addressing content in update_proposal.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "section_key": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "content_type": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "claim_token": {
+            "type": "string",
+            "description": "Pass with later calls that modify this draft."
+          }
+        }
+      },
+      "securitySchemes": [
+        {
+          "type": "noauth"
+        }
+      ],
+      "annotations": {
+        "title": "Create proposal draft",
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "update_proposal",
+      "title": "Update proposal",
+      "description": "Update a proposal. text_sections writes rich text sections by section_key, cover sets the cover heading and overview, pricing replaces the pricing table. Section keys come from create_proposal or get_proposal results. Each call is one edit the user approves, so writing one section per call keeps each approval specific.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string",
+            "description": "The proposal_id returned by create_proposal or list_proposals."
+          },
+          "claim_token": {
+            "type": "string",
+            "description": "The claim_token returned by create_proposal. Required when not signed in."
+          },
+          "title": {
+            "type": "string",
+            "description": "New proposal title."
+          },
+          "client_name": {
+            "type": "string",
+            "description": "New client or company name for the cover."
+          },
+          "cover": {
+            "type": "object",
+            "description": "Cover section content.",
+            "properties": {
+              "heading": {
+                "type": "string",
+                "description": "The large cover heading."
+              },
+              "overview": {
+                "type": "string",
+                "description": "1-2 sentence overview paragraph under the heading."
+              }
+            },
+            "additionalProperties": false
+          },
+          "pricing": {
+            "type": "object",
+            "description": "Replaces the pricing table's line items.",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "New heading for the pricing section."
+              },
+              "currency": {
+                "type": "string",
+                "description": "ISO currency code, e.g. USD or EUR."
+              },
+              "items": {
+                "type": "array",
+                "description": "The full list of line items.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "type": "number",
+                      "description": "Defaults to 1."
+                    },
+                    "unit_price": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "unit_price"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "additionalProperties": false
+          },
+          "text_sections": {
+            "type": "array",
+            "description": "Rich text section updates. Use cover and pricing for those sections.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "section_key": {
+                  "type": "string",
+                  "description": "A rich text section key, e.g. executive_summary."
+                },
+                "title": {
+                  "type": "string",
+                  "description": "New section heading."
+                },
+                "body_html": {
+                  "type": "string",
+                  "description": "HTML body (p, h3, ul, ol, strong, em)."
+                }
+              },
+              "required": [
+                "section_key",
+                "body_html"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "proposal_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "link": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Hosted page for the proposal: a read-only preview while drafting, the published page after publish. Not an editor."
+          },
+          "totals": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Sum of pricing line items, or null without a pricing section.",
+            "properties": {
+              "currency": {
+                "type": "string"
+              },
+              "total": {
+                "type": "number"
+              }
+            }
+          },
+          "sections": {
+            "type": "array",
+            "description": "Section keys for addressing content in update_proposal.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "section_key": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "content_type": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "securitySchemes": [
+        {
+          "type": "noauth"
+        },
+        {
+          "type": "oauth2"
+        }
+      ],
+      "annotations": {
+        "title": "Update proposal",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "add_section",
+      "title": "Add section",
+      "description": "Add a new rich text section to a proposal, for content the built-in sections don't cover (for example case studies, guarantees, or an FAQ). Returns the new section_key; pass body_html to write the content in the same call, or write it later with update_proposal text_sections. By default the section is appended at the end; pass insert_after with an existing section_key to place it right after that section. Works without an account.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string",
+            "description": "The proposal_id returned by create_proposal or list_proposals."
+          },
+          "claim_token": {
+            "type": "string",
+            "description": "The claim_token returned by create_proposal. Required when not signed in."
+          },
+          "title": {
+            "type": "string",
+            "description": "Heading for the new section."
+          },
+          "body_html": {
+            "type": "string",
+            "description": "HTML body (p, h3, ul, ol, strong, em). Optional; the section starts empty without it."
+          },
+          "insert_after": {
+            "type": "string",
+            "description": "section_key of the existing section the new one should follow, e.g. scope. Omit to append at the end."
+          }
+        },
+        "required": [
+          "proposal_id",
+          "title"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "link": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Hosted page for the proposal: a read-only preview while drafting, the published page after publish. Not an editor."
+          },
+          "totals": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Sum of pricing line items, or null without a pricing section.",
+            "properties": {
+              "currency": {
+                "type": "string"
+              },
+              "total": {
+                "type": "number"
+              }
+            }
+          },
+          "sections": {
+            "type": "array",
+            "description": "Section keys for addressing content in update_proposal.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "section_key": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "content_type": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "section_key": {
+            "type": "string",
+            "description": "Key of the new section, for update_proposal."
+          }
+        }
+      },
+      "securitySchemes": [
+        {
+          "type": "noauth"
+        },
+        {
+          "type": "oauth2"
+        }
+      ],
+      "annotations": {
+        "title": "Add section",
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "remove_section",
+      "title": "Remove section",
+      "description": "Remove a section from a proposal by its section_key, deleting its content permanently. Works on both template sections the user doesn't need (for example timeline or about) and sections added with add_section. The cover cannot be removed. Confirm with the user before removing a section that has content. Works without an account.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string",
+            "description": "The proposal_id returned by create_proposal or list_proposals."
+          },
+          "claim_token": {
+            "type": "string",
+            "description": "The claim_token returned by create_proposal. Required when not signed in."
+          },
+          "section_key": {
+            "type": "string",
+            "description": "Key of the section to remove, e.g. timeline."
+          }
+        },
+        "required": [
+          "proposal_id",
+          "section_key"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "link": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Hosted page for the proposal: a read-only preview while drafting, the published page after publish. Not an editor."
+          },
+          "totals": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Sum of pricing line items, or null without a pricing section.",
+            "properties": {
+              "currency": {
+                "type": "string"
+              },
+              "total": {
+                "type": "number"
+              }
+            }
+          },
+          "sections": {
+            "type": "array",
+            "description": "Section keys for addressing content in update_proposal.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "section_key": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "content_type": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "securitySchemes": [
+        {
+          "type": "noauth"
+        },
+        {
+          "type": "oauth2"
+        }
+      ],
+      "annotations": {
+        "title": "Remove section",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "export_pdf",
+      "title": "Export PDF",
+      "description": "Get a link that downloads the proposal as a PDF, for users who want a file. When the proposal is going to a client, the default delivery is publish_proposal's live hosted link, which tells the sender when the client first opens it. For drafts the download starts automatically when the link opens.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string",
+            "description": "The proposal_id returned by create_proposal or list_proposals."
+          },
+          "claim_token": {
+            "type": "string",
+            "description": "The claim_token returned by create_proposal. Required when not signed in."
+          }
+        },
+        "required": [
+          "proposal_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "link": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Hosted page for the proposal: a read-only preview while drafting, the published page after publish. Not an editor."
+          },
+          "totals": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Sum of pricing line items, or null without a pricing section.",
+            "properties": {
+              "currency": {
+                "type": "string"
+              },
+              "total": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      },
+      "securitySchemes": [
+        {
+          "type": "noauth"
+        },
+        {
+          "type": "oauth2"
+        }
+      ],
+      "annotations": {
+        "title": "Export PDF",
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "apply_branding",
+      "title": "Apply branding",
+      "description": "Brand the proposal with your own business's logo and colors. Pass your website URL; the app fetches it and extracts your logo and brand colors and applies them as the proposal's branding, which appears as the sender (the business the proposal is from). Takes the sender's own site, not the client's: the client appears only as the named recipient, never as the author. The logo and colors come only from the site; the tool takes no logo or color values. Needs a website URL. Falls back to the neutral professional default when a site has no usable branding. Works without an account.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string",
+            "description": "The proposal_id returned by create_proposal or list_proposals."
+          },
+          "website_url": {
+            "type": "string",
+            "description": "Your own business's website, to take your logo and brand colors from, e.g. yourstudio.com."
+          },
+          "claim_token": {
+            "type": "string",
+            "description": "The claim_token returned by create_proposal. Required when not signed in."
+          }
+        },
+        "required": [
+          "proposal_id",
+          "website_url"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "link": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Hosted page for the proposal: a read-only preview while drafting, the published page after publish. Not an editor."
+          },
+          "totals": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Sum of pricing line items, or null without a pricing section.",
+            "properties": {
+              "currency": {
+                "type": "string"
+              },
+              "total": {
+                "type": "number"
+              }
+            }
+          },
+          "sections": {
+            "type": "array",
+            "description": "Section keys for addressing content in update_proposal.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "section_key": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "content_type": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "securitySchemes": [
+        {
+          "type": "noauth"
+        },
+        {
+          "type": "oauth2"
+        }
+      ],
+      "annotations": {
+        "title": "Apply branding",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "publish_proposal",
+      "title": "Publish proposal",
+      "description": "Publish a proposal to its live hosted link and return the link \u2014 the default way to deliver a finished proposal to its client. The sender is notified the first time the client opens the link. A draft created before sign-in is attached to your account automatically.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string",
+            "description": "The proposal_id returned by create_proposal or list_proposals."
+          },
+          "claim_token": {
+            "type": "string",
+            "description": "The claim_token returned by create_proposal. Required when not signed in."
+          }
+        },
+        "required": [
+          "proposal_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "link": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Hosted page for the proposal: a read-only preview while drafting, the published page after publish. Not an editor."
+          },
+          "totals": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Sum of pricing line items, or null without a pricing section.",
+            "properties": {
+              "currency": {
+                "type": "string"
+              },
+              "total": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      },
+      "securitySchemes": [
+        {
+          "type": "oauth2"
+        }
+      ],
+      "annotations": {
+        "title": "Publish proposal",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "list_proposals",
+      "title": "List proposals",
+      "description": "List the signed-in account's proposals with status and links, most recently updated first.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "proposals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "proposal_id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "link": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Hosted page for the proposal: a read-only preview while drafting, the published page after publish. Not an editor."
+                },
+                "updated_at": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "securitySchemes": [
+        {
+          "type": "oauth2"
+        }
+      ],
+      "annotations": {
+        "title": "List proposals",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_proposal",
+      "title": "Get proposal",
+      "description": "Get a proposal's status, totals, link, and section keys. The full document stays on the hosted page. Works without an account for a draft from create_proposal when its claim_token is passed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string",
+            "description": "The proposal_id returned by create_proposal or list_proposals."
+          },
+          "claim_token": {
+            "type": "string",
+            "description": "The claim_token returned by create_proposal. Required when not signed in."
+          }
+        },
+        "required": [
+          "proposal_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "link": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Hosted page for the proposal: a read-only preview while drafting, the published page after publish. Not an editor."
+          },
+          "totals": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Sum of pricing line items, or null without a pricing section.",
+            "properties": {
+              "currency": {
+                "type": "string"
+              },
+              "total": {
+                "type": "number"
+              }
+            }
+          },
+          "sections": {
+            "type": "array",
+            "description": "Section keys for addressing content in update_proposal.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "section_key": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "content_type": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "securitySchemes": [
+        {
+          "type": "noauth"
+        },
+        {
+          "type": "oauth2"
+        }
+      ],
+      "annotations": {
+        "title": "Get proposal",
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "duplicate_proposal",
+      "title": "Duplicate proposal",
+      "description": "Create a copy of an existing proposal as a new draft. Client identity is cleared so the copy can be adapted for a new recipient.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string",
+            "description": "The proposal_id returned by create_proposal or list_proposals."
+          },
+          "title": {
+            "type": "string",
+            "description": "Title for the copy."
+          }
+        },
+        "required": [
+          "proposal_id"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "proposal_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "link": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Hosted page for the proposal: a read-only preview while drafting, the published page after publish. Not an editor."
+          },
+          "totals": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Sum of pricing line items, or null without a pricing section.",
+            "properties": {
+              "currency": {
+                "type": "string"
+              },
+              "total": {
+                "type": "number"
+              }
+            }
+          },
+          "sections": {
+            "type": "array",
+            "description": "Section keys for addressing content in update_proposal.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "section_key": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "content_type": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "securitySchemes": [
+        {
+          "type": "oauth2"
+        }
+      ],
+      "annotations": {
+        "title": "Duplicate proposal",
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      }
+    }
+  ]
+}
